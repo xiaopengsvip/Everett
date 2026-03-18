@@ -3,6 +3,8 @@
 > **Write · Think · Grow**  
 > 用语言表达，用书写沉淀，用思考成长。
 
+🌐 **在线体验网站**: [https://everett.allapple.top/](https://everett.allapple.top/)
+
 Everett Minds 不是一个普通的在线学习网站，而是一个**专注训练表达与思维的数字道场**。我们相信，人类的成长本质上是表达能力的提升，而表达来源于语言的精准、书写的专注以及思考的深度。
 
 ---
