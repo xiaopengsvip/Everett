@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { PenTool, MessageSquare, Brain, ArrowRight, ArrowLeft, Sparkles, Globe, LogIn, LogOut, LayoutDashboard, User, Clock, CheckCircle2, Edit3, Eye, ChevronDown, ChevronRight, BookOpen, Settings, Library, Activity, FileText, Menu, X, Plus } from 'lucide-react';
+import { PenTool, MessageSquare, Brain, ArrowRight, ArrowLeft, Sparkles, Globe, LogIn, LogOut, LayoutDashboard, User, Clock, CheckCircle2, Edit3, Eye, ChevronDown, ChevronRight, ChevronLeft, BookOpen, Settings, Library, Activity, FileText, Menu, X, Plus, Maximize, Minimize, BarChart2 } from 'lucide-react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
@@ -140,8 +140,33 @@ export default function App() {
   const [activeSidebarItem, setActiveSidebarItem] = useState('dashboard');
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['practice']);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSecondarySidebarCollapsed, setIsSecondarySidebarCollapsed] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isFocusMode, setIsFocusMode] = useState(false);
 
   const t = translations[lang];
+
+  // Fullscreen effect
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
 
   // Timer effect
   useEffect(() => {
@@ -208,44 +233,50 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-[#1A1A1A] selection:bg-[#1A1A1A] selection:text-white font-sans flex flex-col">
       {/* Shared Navigation */}
-      <nav className="flex items-center justify-between px-6 py-6 md:px-12 max-w-7xl mx-auto w-full">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView('home')}>
-          <img src="https://allapple.top/resource/logo.png" alt="Everett Minds Logo" className="w-8 h-8 object-contain" referrerPolicy="no-referrer" />
-          <span className="font-serif font-semibold text-lg tracking-wide">Everett Minds</span>
-        </div>
-        <div className="flex items-center gap-6 text-sm font-medium text-gray-600">
-          {view === 'home' && (
-            <div className="hidden md:flex items-center gap-8 mr-4">
-              <a href="#about" className="hover:text-black transition-colors">{t.nav.about}</a>
-              <a href="#features" className="hover:text-black transition-colors">{t.nav.practice}</a>
-              <a href="#philosophy" className="hover:text-black transition-colors">{t.nav.philosophy}</a>
-            </div>
-          )}
-          
-          <button onClick={toggleLang} className="flex items-center gap-1 hover:text-black transition-colors">
-            <Globe className="w-4 h-4" />
-            {lang === 'zh' ? 'EN' : '中文'}
-          </button>
-
-          {isLoggedIn ? (
-            <>
-              <button onClick={() => setView('workspace')} className="flex items-center gap-1 hover:text-black transition-colors">
-                <LayoutDashboard className="w-4 h-4" />
-                <span className="hidden sm:inline">{t.nav.workspace}</span>
-              </button>
-              <button onClick={handleLogout} className="flex items-center gap-1 hover:text-black transition-colors">
-                <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">{t.nav.logout}</span>
-              </button>
-            </>
-          ) : (
-            <button onClick={() => setView('login')} className="flex items-center gap-1 hover:text-black transition-colors">
-              <LogIn className="w-4 h-4" />
-              <span className="hidden sm:inline">{t.nav.login}</span>
+      {(!isFocusMode || view !== 'workspace' || !activeModule) && (
+        <nav className="flex items-center justify-between px-6 py-6 md:px-12 max-w-7xl mx-auto w-full">
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView('home')}>
+            <img src="https://allapple.top/resource/logo.png" alt="Everett Minds Logo" className="w-8 h-8 object-contain" referrerPolicy="no-referrer" />
+            <span className="font-serif font-semibold text-lg tracking-wide">Everett Minds</span>
+          </div>
+          <div className="flex items-center gap-6 text-sm font-medium text-gray-600">
+            {view === 'home' && (
+              <div className="hidden md:flex items-center gap-8 mr-4">
+                <a href="#about" className="hover:text-black transition-colors">{t.nav.about}</a>
+                <a href="#features" className="hover:text-black transition-colors">{t.nav.practice}</a>
+                <a href="#philosophy" className="hover:text-black transition-colors">{t.nav.philosophy}</a>
+              </div>
+            )}
+            
+            <button onClick={toggleFullscreen} className="flex items-center gap-1 hover:text-black transition-colors" title={isFullscreen ? (lang === 'zh' ? '退出全屏' : 'Exit Fullscreen') : (lang === 'zh' ? '全屏' : 'Fullscreen')}>
+              {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
             </button>
-          )}
-        </div>
-      </nav>
+
+            <button onClick={toggleLang} className="flex items-center gap-1 hover:text-black transition-colors">
+              <Globe className="w-4 h-4" />
+              {lang === 'zh' ? 'EN' : '中文'}
+            </button>
+
+            {isLoggedIn ? (
+              <>
+                <button onClick={() => setView('workspace')} className="flex items-center gap-1 hover:text-black transition-colors">
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span className="hidden sm:inline">{t.nav.workspace}</span>
+                </button>
+                <button onClick={handleLogout} className="flex items-center gap-1 hover:text-black transition-colors">
+                  <LogOut className="w-4 h-4" />
+                  <span className="hidden sm:inline">{t.nav.logout}</span>
+                </button>
+              </>
+            ) : (
+              <button onClick={() => setView('login')} className="flex items-center gap-1 hover:text-black transition-colors">
+                <LogIn className="w-4 h-4" />
+                <span className="hidden sm:inline">{t.nav.login}</span>
+              </button>
+            )}
+          </div>
+        </nav>
+      )}
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col">
@@ -441,6 +472,10 @@ export default function App() {
                 <button type="submit" className="w-full py-4 bg-[#1A1A1A] text-white rounded-xl font-medium hover:bg-black transition-colors mt-4">
                   {t.login.btn}
                 </button>
+                <div className="mt-6 text-center text-sm text-gray-500">
+                  <p>{lang === 'zh' ? '体验账号' : 'Experience Account'}: <span className="font-mono text-black">tiyan</span></p>
+                  <p>{lang === 'zh' ? '体验密码' : 'Experience Password'}: <span className="font-mono text-black">tiyan@123ty</span></p>
+                </div>
               </form>
             </motion.div>
           </div>
@@ -449,81 +484,186 @@ export default function App() {
         {view === 'workspace' && (
           <div className="flex-1 flex w-full h-full overflow-hidden bg-[#f5f2ed] border-t border-gray-200">
             {/* Primary Sidebar */}
-            <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full shrink-0">
+            {(!isFocusMode || !activeModule) && (
+            <motion.div 
+              initial={false}
+              animate={{ width: isSidebarCollapsed ? 80 : 256 }}
+              className="bg-white border-r border-gray-200 flex flex-col h-full shrink-0 relative z-20"
+            >
+              {/* Collapse Toggle */}
+              <button 
+                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                className="absolute -right-3 top-6 w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-500 hover:text-black hover:shadow-sm z-30"
+              >
+                {isSidebarCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
+              </button>
+
               {/* User profile */}
-              <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+              <div className={`p-6 border-b border-gray-100 flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
+                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center shrink-0">
                   <User className="w-5 h-5 text-gray-500" />
                 </div>
-                <div>
-                  <p className="font-medium text-sm">{username || 'Admin'}</p>
-                  <p className="text-xs text-gray-500">{t.nav.workspace}</p>
-                </div>
+                {!isSidebarCollapsed && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="overflow-hidden whitespace-nowrap">
+                    <p className="font-medium text-sm">{username || 'Admin'}</p>
+                    <p className="text-xs text-gray-500">{t.nav.workspace}</p>
+                  </motion.div>
+                )}
               </div>
 
               {/* Navigation */}
               <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-                <button onClick={() => { setActiveSidebarItem('dashboard'); setActiveModule(null); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSidebarItem === 'dashboard' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
-                  <LayoutDashboard className="w-4 h-4" />
-                  {t.sidebar.dashboard}
+                <button 
+                  onClick={() => { setActiveSidebarItem('dashboard'); setActiveModule(null); }} 
+                  className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSidebarItem === 'dashboard' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                  title={isSidebarCollapsed ? t.sidebar.dashboard : undefined}
+                >
+                  <LayoutDashboard className="w-4 h-4 shrink-0" />
+                  {!isSidebarCollapsed && <span>{t.sidebar.dashboard}</span>}
                 </button>
 
-                <div className="pt-4 pb-2 px-3">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{t.sidebar.practice}</p>
+                <div className={`pt-4 pb-2 ${isSidebarCollapsed ? 'text-center' : 'px-3'}`}>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    {isSidebarCollapsed ? '...' : t.sidebar.practice}
+                  </p>
                 </div>
                 
-                <button onClick={() => { setActiveSidebarItem('lang'); setActiveModule(null); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSidebarItem === 'lang' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
-                  <MessageSquare className="w-4 h-4" />
-                  {t.sidebar.lang}
+                <button 
+                  onClick={() => { setActiveSidebarItem('lang'); setActiveModule(null); }} 
+                  className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSidebarItem === 'lang' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                  title={isSidebarCollapsed ? t.sidebar.lang : undefined}
+                >
+                  <MessageSquare className="w-4 h-4 shrink-0" />
+                  {!isSidebarCollapsed && <span>{t.sidebar.lang}</span>}
                 </button>
-                <button onClick={() => { setActiveSidebarItem('ink'); setActiveModule(null); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSidebarItem === 'ink' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
-                  <PenTool className="w-4 h-4" />
-                  {t.sidebar.ink}
+                <button 
+                  onClick={() => { setActiveSidebarItem('ink'); setActiveModule(null); }} 
+                  className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSidebarItem === 'ink' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                  title={isSidebarCollapsed ? t.sidebar.ink : undefined}
+                >
+                  <PenTool className="w-4 h-4 shrink-0" />
+                  {!isSidebarCollapsed && <span>{t.sidebar.ink}</span>}
                 </button>
-                <button onClick={() => { setActiveSidebarItem('mind'); setActiveModule(null); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSidebarItem === 'mind' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
-                  <Brain className="w-4 h-4" />
-                  {t.sidebar.mind}
+                <button 
+                  onClick={() => { setActiveSidebarItem('mind'); setActiveModule(null); }} 
+                  className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSidebarItem === 'mind' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                  title={isSidebarCollapsed ? t.sidebar.mind : undefined}
+                >
+                  <Brain className="w-4 h-4 shrink-0" />
+                  {!isSidebarCollapsed && <span>{t.sidebar.mind}</span>}
                 </button>
 
-                <div className="pt-4 pb-2 px-3">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">More</p>
+                <div className={`pt-4 pb-2 ${isSidebarCollapsed ? 'text-center' : 'px-3'}`}>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    {isSidebarCollapsed ? '...' : 'More'}
+                  </p>
                 </div>
-                <button onClick={() => { setActiveSidebarItem('library'); setActiveModule(null); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSidebarItem === 'library' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
-                  <BookOpen className="w-4 h-4" />
-                  {t.sidebar.library}
+                <button 
+                  onClick={() => { setActiveSidebarItem('library'); setActiveModule(null); }} 
+                  className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSidebarItem === 'library' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                  title={isSidebarCollapsed ? t.sidebar.library : undefined}
+                >
+                  <BookOpen className="w-4 h-4 shrink-0" />
+                  {!isSidebarCollapsed && <span>{t.sidebar.library}</span>}
                 </button>
-                <button onClick={() => { setActiveSidebarItem('settings'); setActiveModule(null); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSidebarItem === 'settings' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
-                  <Settings className="w-4 h-4" />
-                  {t.sidebar.settings}
+                <button 
+                  onClick={() => { setActiveSidebarItem('history'); setActiveModule(null); }} 
+                  className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSidebarItem === 'history' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                  title={isSidebarCollapsed ? (lang === 'zh' ? '历史记录' : 'History') : undefined}
+                >
+                  <Clock className="w-4 h-4 shrink-0" />
+                  {!isSidebarCollapsed && <span>{lang === 'zh' ? '历史记录' : 'History'}</span>}
+                </button>
+                <button 
+                  onClick={() => { setActiveSidebarItem('statistics'); setActiveModule(null); }} 
+                  className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSidebarItem === 'statistics' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                  title={isSidebarCollapsed ? (lang === 'zh' ? '统计数据' : 'Statistics') : undefined}
+                >
+                  <BarChart2 className="w-4 h-4 shrink-0" />
+                  {!isSidebarCollapsed && <span>{lang === 'zh' ? '统计数据' : 'Statistics'}</span>}
+                </button>
+                <button 
+                  onClick={() => { setActiveSidebarItem('settings'); setActiveModule(null); }} 
+                  className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSidebarItem === 'settings' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                  title={isSidebarCollapsed ? t.sidebar.settings : undefined}
+                >
+                  <Settings className="w-4 h-4 shrink-0" />
+                  {!isSidebarCollapsed && <span>{t.sidebar.settings}</span>}
                 </button>
               </div>
 
               {/* Footer / Version */}
               <div className="p-4 border-t border-gray-100">
-                <p className="text-xs text-gray-400 font-mono text-center">{t.footer.version}: {VERSION}</p>
+                <p className="text-xs text-gray-400 font-mono text-center">
+                  {isSidebarCollapsed ? 'v2' : `${t.footer.version}: ${VERSION}`}
+                </p>
               </div>
-            </div>
+            </motion.div>
+            )}
 
             {/* Secondary Sidebar (Function Directory) */}
-            {['lang', 'ink', 'mind'].includes(activeSidebarItem) && !activeModule && (
-              <div className="w-72 bg-gray-50 border-r border-gray-200 flex flex-col h-full shrink-0">
-                <div className="p-6 border-b border-gray-200">
-                  <h3 className="font-serif font-medium text-lg">{t.sidebar[activeSidebarItem as 'lang'|'ink'|'mind']}</h3>
-                  <p className="text-xs text-gray-500 mt-1">Select a preset to start</p>
+            {['lang', 'ink', 'mind'].includes(activeSidebarItem) && !activeModule && (!isFocusMode || !activeModule) && (
+              <motion.div 
+                initial={false}
+                animate={{ width: isSecondarySidebarCollapsed ? 80 : 288 }}
+                className="bg-gray-50 border-r border-gray-200 flex flex-col h-full shrink-0 relative"
+              >
+                {/* Secondary Sidebar Toggle */}
+                <button 
+                  onClick={() => setIsSecondarySidebarCollapsed(!isSecondarySidebarCollapsed)}
+                  className="absolute -right-3 top-6 bg-white border border-gray-200 rounded-full p-1 shadow-sm hover:bg-gray-50 z-10"
+                >
+                  {isSecondarySidebarCollapsed ? <ChevronRight className="w-4 h-4 text-gray-500" /> : <ChevronLeft className="w-4 h-4 text-gray-500" />}
+                </button>
+
+                <div className={`p-6 border-b border-gray-200 ${isSecondarySidebarCollapsed ? 'flex justify-center px-2' : ''}`}>
+                  {isSecondarySidebarCollapsed ? (
+                    <div className="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center">
+                      {activeSidebarItem === 'lang' && <MessageSquare className="w-5 h-5 text-gray-500" />}
+                      {activeSidebarItem === 'ink' && <PenTool className="w-5 h-5 text-gray-500" />}
+                      {activeSidebarItem === 'mind' && <Brain className="w-5 h-5 text-gray-500" />}
+                    </div>
+                  ) : (
+                    <>
+                      <h3 className="font-serif font-medium text-lg">{t.sidebar[activeSidebarItem as 'lang'|'ink'|'mind']}</h3>
+                      <p className="text-xs text-gray-500 mt-1">{lang === 'zh' ? '选择一个预设开始' : 'Select a preset to start'}</p>
+                    </>
+                  )}
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
                   {t.presets[activeSidebarItem as 'lang'|'ink'|'mind'].map(preset => (
-                    <div key={preset.id} onClick={() => startPractice(activeSidebarItem as 'lang'|'ink'|'mind', preset.desc)} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
-                      <h4 className="font-medium text-sm mb-1 group-hover:text-black">{preset.name}</h4>
-                      <p className="text-xs text-gray-500 line-clamp-2">{preset.desc}</p>
+                    <div 
+                      key={preset.id} 
+                      onClick={() => startPractice(activeSidebarItem as 'lang'|'ink'|'mind', preset.desc)} 
+                      className={`bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer group ${isSecondarySidebarCollapsed ? 'p-3 flex justify-center' : 'p-4'}`}
+                      title={isSecondarySidebarCollapsed ? preset.name : undefined}
+                    >
+                      {isSecondarySidebarCollapsed ? (
+                        <div className="w-8 h-8 flex items-center justify-center font-serif font-medium text-gray-500 group-hover:text-black">
+                          {preset.name.charAt(0)}
+                        </div>
+                      ) : (
+                        <>
+                          <h4 className="font-medium text-sm mb-1 group-hover:text-black">{preset.name}</h4>
+                          <p className="text-xs text-gray-500 line-clamp-2">{preset.desc}</p>
+                        </>
+                      )}
                     </div>
                   ))}
                   {/* Free practice option */}
-                  <div onClick={() => startPractice(activeSidebarItem as 'lang'|'ink'|'mind')} className="bg-transparent border border-dashed border-gray-300 p-4 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer flex items-center justify-center text-gray-500 hover:text-black mt-4">
-                    <span className="text-sm font-medium flex items-center gap-2"><Plus className="w-4 h-4" /> Free Practice</span>
+                  <div 
+                    onClick={() => startPractice(activeSidebarItem as 'lang'|'ink'|'mind')} 
+                    className={`bg-transparent border border-dashed border-gray-300 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer flex items-center justify-center text-gray-500 hover:text-black mt-4 ${isSecondarySidebarCollapsed ? 'p-3' : 'p-4'}`}
+                    title={isSecondarySidebarCollapsed ? (lang === 'zh' ? '自由练习' : 'Free Practice') : undefined}
+                  >
+                    {isSecondarySidebarCollapsed ? (
+                      <Plus className="w-5 h-5" />
+                    ) : (
+                      <span className="text-sm font-medium flex items-center gap-2"><Plus className="w-4 h-4" /> {lang === 'zh' ? '自由练习' : 'Free Practice'}</span>
+                    )}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             )}
 
             {/* Main Content Area */}
@@ -586,6 +726,309 @@ export default function App() {
                         <p className="text-gray-500 text-sm mb-6">{t.features.mind.desc}</p>
                         <button className="text-sm font-medium flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                           {t.dashboard.start} <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Recent Activity & Goals */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                      <div className="lg:col-span-2 bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-sm">
+                        <div className="flex items-center justify-between mb-6">
+                          <h3 className="text-lg font-serif font-medium">{lang === 'zh' ? '最近活动' : 'Recent Activity'}</h3>
+                          <button className="text-sm text-gray-500 hover:text-black transition-colors">{lang === 'zh' ? '查看全部' : 'View All'}</button>
+                        </div>
+                        <div className="space-y-4">
+                          {[
+                            { title: lang === 'zh' ? '完成了「每日英文日记」' : 'Completed "Daily Journal"', time: lang === 'zh' ? '2 小时前' : '2 hours ago', icon: <MessageSquare className="w-4 h-4" />, color: 'text-blue-600', bg: 'bg-blue-50' },
+                            { title: lang === 'zh' ? '完成了「自由书写」' : 'Completed "Free Writing"', time: lang === 'zh' ? '昨天' : 'Yesterday', icon: <PenTool className="w-4 h-4" />, color: 'text-amber-600', bg: 'bg-amber-50' },
+                            { title: lang === 'zh' ? '完成了「第一性原理」思考' : 'Completed "First Principles" thinking', time: lang === 'zh' ? '3 天前' : '3 days ago', icon: <Brain className="w-4 h-4" />, color: 'text-emerald-600', bg: 'bg-emerald-50' }
+                          ].map((activity, i) => (
+                            <div key={i} className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${activity.bg} ${activity.color}`}>
+                                {activity.icon}
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-sm font-medium">{activity.title}</p>
+                                <p className="text-xs text-gray-500 mt-0.5">{activity.time}</p>
+                              </div>
+                              <ChevronRight className="w-4 h-4 text-gray-300" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-sm">
+                        <h3 className="text-lg font-serif font-medium mb-6">{lang === 'zh' ? '每日目标' : 'Daily Goals'}</h3>
+                        <div className="space-y-5">
+                          <div>
+                            <div className="flex justify-between text-sm mb-2">
+                              <span className="font-medium text-gray-700">{lang === 'zh' ? '语言练习' : 'Language Practice'}</span>
+                              <span className="text-gray-500">1/2</span>
+                            </div>
+                            <div className="w-full bg-gray-100 rounded-full h-2">
+                              <div className="bg-black h-2 rounded-full" style={{ width: '50%' }}></div>
+                            </div>
+                          </div>
+                          <div>
+                            <div className="flex justify-between text-sm mb-2">
+                              <span className="font-medium text-gray-700">{lang === 'zh' ? '书写练习' : 'Ink Practice'}</span>
+                              <span className="text-gray-500">0/1</span>
+                            </div>
+                            <div className="w-full bg-gray-100 rounded-full h-2">
+                              <div className="bg-black h-2 rounded-full" style={{ width: '0%' }}></div>
+                            </div>
+                          </div>
+                          <div>
+                            <div className="flex justify-between text-sm mb-2">
+                              <span className="font-medium text-gray-700">{lang === 'zh' ? '思维记录' : 'Mind Records'}</span>
+                              <span className="text-gray-500">1/1</span>
+                            </div>
+                            <div className="w-full bg-gray-100 rounded-full h-2">
+                              <div className="bg-emerald-500 h-2 rounded-full" style={{ width: '100%' }}></div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-8 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                          <div className="flex items-start gap-3">
+                            <Sparkles className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-sm font-medium">{lang === 'zh' ? '保持连胜！' : 'Keep the streak!'}</p>
+                              <p className="text-xs text-gray-500 mt-1">{lang === 'zh' ? '你已经连续学习 3 天。今天再完成一个练习即可保持连胜。' : 'You have a 3-day learning streak. Complete one more practice today to keep it going.'}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+
+              {activeSidebarItem === 'history' && (
+                <div className="p-8 md:p-12 max-w-5xl mx-auto w-full">
+                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                    <div className="flex items-center gap-4 mb-12">
+                      <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
+                        <Clock className="w-8 h-8 text-gray-500" />
+                      </div>
+                      <div>
+                        <h1 className="text-3xl font-serif font-medium">{lang === 'zh' ? '历史记录' : 'History'}</h1>
+                        <p className="text-gray-500 mt-1">{lang === 'zh' ? '回顾你过去的练习和思考' : 'Review your past practices and thoughts'}</p>
+                      </div>
+                    </div>
+
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                      <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                        <h3 className="font-medium">{lang === 'zh' ? '所有记录' : 'All Records'}</h3>
+                        <div className="flex gap-2">
+                          <button className="px-3 py-1.5 text-sm font-medium bg-black text-white rounded-lg">{lang === 'zh' ? '全部' : 'All'}</button>
+                          <button className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">{t.sidebar.lang}</button>
+                          <button className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">{t.sidebar.ink}</button>
+                          <button className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">{t.sidebar.mind}</button>
+                        </div>
+                      </div>
+                      <div className="divide-y divide-gray-100">
+                        {[
+                          { title: lang === 'zh' ? '每日英文日记' : 'Daily Journal', desc: lang === 'zh' ? '今天天气很好，我去了公园散步。' : 'The weather was great today, I went for a walk in the park.', time: lang === 'zh' ? '今天 10:30' : 'Today 10:30', type: t.sidebar.lang, icon: <MessageSquare className="w-4 h-4" />, color: 'text-blue-600', bg: 'bg-blue-50' },
+                          { title: lang === 'zh' ? '自由书写' : 'Free Writing', desc: lang === 'zh' ? '关于未来的思考，我希望能够...' : 'Thoughts about the future, I hope to be able to...', time: lang === 'zh' ? '昨天 15:45' : 'Yesterday 15:45', type: t.sidebar.ink, icon: <PenTool className="w-4 h-4" />, color: 'text-amber-600', bg: 'bg-amber-50' },
+                          { title: lang === 'zh' ? '第一性原理' : 'First Principles', desc: lang === 'zh' ? '分析问题的本质，剥离表象...' : 'Analyzing the essence of the problem, stripping away the surface...', time: lang === 'zh' ? '3 天前 09:15' : '3 days ago 09:15', type: t.sidebar.mind, icon: <Brain className="w-4 h-4" />, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                          { title: lang === 'zh' ? '英文对话练习' : 'English Conversation', desc: lang === 'zh' ? '与 AI 进行了关于科技的对话。' : 'Had a conversation with AI about technology.', time: lang === 'zh' ? '上周 14:20' : 'Last week 14:20', type: t.sidebar.lang, icon: <MessageSquare className="w-4 h-4" />, color: 'text-blue-600', bg: 'bg-blue-50' },
+                          { title: lang === 'zh' ? '读书笔记' : 'Reading Notes', desc: lang === 'zh' ? '《思考，快与慢》第一章总结。' : 'Summary of Chapter 1 of "Thinking, Fast and Slow".', time: lang === 'zh' ? '上周 20:00' : 'Last week 20:00', type: t.sidebar.ink, icon: <PenTool className="w-4 h-4" />, color: 'text-amber-600', bg: 'bg-amber-50' }
+                        ].map((record, i) => (
+                          <div key={i} className="p-6 hover:bg-gray-50 transition-colors cursor-pointer group flex gap-4">
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${record.bg} ${record.color}`}>
+                              {record.icon}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-start justify-between mb-1">
+                                <h4 className="font-medium text-lg group-hover:text-black transition-colors">{record.title}</h4>
+                                <span className="text-xs text-gray-400">{record.time}</span>
+                              </div>
+                              <p className="text-sm text-gray-500 mb-2 line-clamp-2">{record.desc}</p>
+                              <span className="inline-flex items-center px-2 py-1 rounded-md bg-gray-100 text-xs font-medium text-gray-600">{record.type}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+
+              {activeSidebarItem === 'statistics' && (
+                <div className="p-8 md:p-12 max-w-5xl mx-auto w-full">
+                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                    <div className="flex items-center gap-4 mb-12">
+                      <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
+                        <BarChart2 className="w-8 h-8 text-gray-500" />
+                      </div>
+                      <div>
+                        <h1 className="text-3xl font-serif font-medium">{lang === 'zh' ? '统计数据' : 'Statistics'}</h1>
+                        <p className="text-gray-500 mt-1">{lang === 'zh' ? '查看你的学习进度与习惯' : 'Track your learning progress and habits'}</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                        <p className="text-sm text-gray-500 mb-2">{lang === 'zh' ? '总练习天数' : 'Total Practice Days'}</p>
+                        <p className="text-3xl font-serif font-medium">42 <span className="text-sm font-sans text-gray-400">{lang === 'zh' ? '天' : 'days'}</span></p>
+                      </div>
+                      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                        <p className="text-sm text-gray-500 mb-2">{lang === 'zh' ? '当前连胜' : 'Current Streak'}</p>
+                        <p className="text-3xl font-serif font-medium text-amber-600">3 <span className="text-sm font-sans text-gray-400">{lang === 'zh' ? '天' : 'days'}</span></p>
+                      </div>
+                      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                        <p className="text-sm text-gray-500 mb-2">{lang === 'zh' ? '总学习时长' : 'Total Learning Time'}</p>
+                        <p className="text-3xl font-serif font-medium">{formatTime(totalLearningTime)}</p>
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-sm">
+                      <h3 className="text-lg font-serif font-medium mb-6">{lang === 'zh' ? '练习分布' : 'Practice Distribution'}</h3>
+                      <div className="space-y-6">
+                        <div>
+                          <div className="flex justify-between text-sm mb-2">
+                            <span className="font-medium text-gray-700 flex items-center gap-2"><MessageSquare className="w-4 h-4 text-blue-500" /> {lang === 'zh' ? '语言练习' : 'Language'}</span>
+                            <span className="text-gray-500">45%</span>
+                          </div>
+                          <div className="w-full bg-gray-100 rounded-full h-3">
+                            <div className="bg-blue-500 h-3 rounded-full" style={{ width: '45%' }}></div>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-sm mb-2">
+                            <span className="font-medium text-gray-700 flex items-center gap-2"><PenTool className="w-4 h-4 text-amber-500" /> {lang === 'zh' ? '书写练习' : 'Ink'}</span>
+                            <span className="text-gray-500">25%</span>
+                          </div>
+                          <div className="w-full bg-gray-100 rounded-full h-3">
+                            <div className="bg-amber-500 h-3 rounded-full" style={{ width: '25%' }}></div>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-sm mb-2">
+                            <span className="font-medium text-gray-700 flex items-center gap-2"><Brain className="w-4 h-4 text-emerald-500" /> {lang === 'zh' ? '思维记录' : 'Mind'}</span>
+                            <span className="text-gray-500">30%</span>
+                          </div>
+                          <div className="w-full bg-gray-100 rounded-full h-3">
+                            <div className="bg-emerald-500 h-3 rounded-full" style={{ width: '30%' }}></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+
+              {activeSidebarItem === 'library' && (
+                <div className="p-8 md:p-12 max-w-5xl mx-auto w-full">
+                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                    <div className="flex items-center gap-4 mb-12">
+                      <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
+                        <Library className="w-8 h-8 text-gray-500" />
+                      </div>
+                      <div>
+                        <h1 className="text-3xl font-serif font-medium">{t.sidebar.library}</h1>
+                        <p className="text-gray-500 mt-1">{lang === 'zh' ? '探索精选的阅读材料与资源' : 'Explore curated reading materials and resources'}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {[
+                        { title: lang === 'zh' ? '如何进行有效的深度工作' : 'How to do effective Deep Work', desc: lang === 'zh' ? '在分心的世界里，深度工作是一项能够让你脱颖而出的超能力。' : 'In a distracted world, deep work is a superpower that makes you stand out.', type: 'Article', icon: <BookOpen className="w-6 h-6 text-blue-400" />, bg: 'bg-blue-50' },
+                        { title: lang === 'zh' ? '斯多葛学派的日常练习' : 'Daily Stoic Practices', desc: lang === 'zh' ? '通过古老的智慧，在现代生活中找到内心的平静与力量。' : 'Find inner peace and strength in modern life through ancient wisdom.', type: 'Guide', icon: <Brain className="w-6 h-6 text-emerald-400" />, bg: 'bg-emerald-50' },
+                        { title: lang === 'zh' ? '英文写作的 10 个核心原则' : '10 Core Principles of English Writing', desc: lang === 'zh' ? '从结构到用词，全面提升你的英文表达能力。' : 'From structure to vocabulary, comprehensively improve your English expression.', type: 'Course', icon: <PenTool className="w-6 h-6 text-amber-400" />, bg: 'bg-amber-50' },
+                        { title: lang === 'zh' ? '费曼学习法实践指南' : 'Feynman Technique Guide', desc: lang === 'zh' ? '通过教别人来学习，这是掌握任何复杂概念的最快方法。' : 'Learn by teaching others, the fastest way to master any complex concept.', type: 'Article', icon: <Sparkles className="w-6 h-6 text-purple-400" />, bg: 'bg-purple-50' }
+                      ].map((item, index) => (
+                        <div key={index} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer flex gap-4 group">
+                          <div className={`w-16 h-20 ${item.bg} rounded-lg flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}>
+                            {item.icon}
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-serif font-medium text-lg mb-1 group-hover:text-black transition-colors">{item.title}</h3>
+                            <p className="text-sm text-gray-500 mb-3 line-clamp-2">
+                              {item.desc}
+                            </p>
+                            <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">{item.type}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+
+              {activeSidebarItem === 'settings' && (
+                <div className="p-8 md:p-12 max-w-3xl mx-auto w-full">
+                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                    <div className="flex items-center gap-4 mb-12">
+                      <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
+                        <Settings className="w-8 h-8 text-gray-500" />
+                      </div>
+                      <div>
+                        <h1 className="text-3xl font-serif font-medium">{t.sidebar.settings}</h1>
+                        <p className="text-gray-500 mt-1">{lang === 'zh' ? '管理你的账户与偏好设置' : 'Manage your account and preferences'}</p>
+                      </div>
+                    </div>
+
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-8">
+                      <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium">{lang === 'zh' ? '每日学习目标' : 'Daily Learning Goal'}</h3>
+                          <p className="text-sm text-gray-500">{lang === 'zh' ? '设定每天期望投入的学习时间' : 'Set your expected daily learning time'}</p>
+                        </div>
+                        <select className="bg-gray-50 border border-gray-200 text-sm rounded-lg focus:ring-black focus:border-black block p-2.5">
+                          <option value="15">15 {lang === 'zh' ? '分钟' : 'mins'}</option>
+                          <option value="30">30 {lang === 'zh' ? '分钟' : 'mins'}</option>
+                          <option value="60">60 {lang === 'zh' ? '分钟' : 'mins'}</option>
+                          <option value="120">120 {lang === 'zh' ? '分钟' : 'mins'}</option>
+                        </select>
+                      </div>
+                      <div className="p-6 flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium">{lang === 'zh' ? '专注模式' : 'Focus Mode'}</h3>
+                          <p className="text-sm text-gray-500">{lang === 'zh' ? '练习时自动隐藏侧边栏和导航' : 'Automatically hide sidebar and nav during practice'}</p>
+                        </div>
+                        <div onClick={() => setIsFocusMode(!isFocusMode)} className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${isFocusMode ? 'bg-black' : 'bg-gray-300'}`}>
+                          <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${isFocusMode ? 'right-1' : 'left-1'}`}></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-8">
+                      <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium">{lang === 'zh' ? '语言偏好' : 'Language Preference'}</h3>
+                          <p className="text-sm text-gray-500">{lang === 'zh' ? '选择界面的显示语言' : 'Choose the display language for the interface'}</p>
+                        </div>
+                        <button onClick={toggleLang} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors">
+                          {lang === 'zh' ? '切换至 English' : 'Switch to 中文'}
+                        </button>
+                      </div>
+                      <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium">{lang === 'zh' ? '主题设置' : 'Theme Settings'}</h3>
+                          <p className="text-sm text-gray-500">{lang === 'zh' ? '选择浅色或深色模式' : 'Choose light or dark mode'}</p>
+                        </div>
+                        <div className="flex bg-gray-100 p-1 rounded-lg">
+                          <button className="px-3 py-1 bg-white shadow-sm rounded-md text-sm font-medium">{lang === 'zh' ? '浅色' : 'Light'}</button>
+                          <button className="px-3 py-1 text-gray-500 hover:text-black rounded-md text-sm font-medium transition-colors">{lang === 'zh' ? '深色' : 'Dark'}</button>
+                        </div>
+                      </div>
+                      <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium">{lang === 'zh' ? '每日提醒' : 'Daily Reminders'}</h3>
+                          <p className="text-sm text-gray-500">{lang === 'zh' ? '接收每日练习提醒邮件' : 'Receive daily practice reminder emails'}</p>
+                        </div>
+                        <div className="w-12 h-6 bg-black rounded-full relative cursor-pointer">
+                          <div className="w-4 h-4 bg-white rounded-full absolute top-1 right-1"></div>
+                        </div>
+                      </div>
+                      <div className="p-6 flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium text-red-600">{lang === 'zh' ? '退出登录' : 'Log Out'}</h3>
+                          <p className="text-sm text-gray-500">{lang === 'zh' ? '退出当前账号' : 'Log out of your current account'}</p>
+                        </div>
+                        <button onClick={handleLogout} className="px-4 py-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors">
+                          {t.nav.logout}
                         </button>
                       </div>
                     </div>
