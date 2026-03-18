@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { PenTool, MessageSquare, Brain, ArrowRight, Sparkles, Globe, LogIn, LogOut, LayoutDashboard, User, Clock, CheckCircle2, Edit3, Eye, ChevronDown, ChevronRight, BookOpen, Settings, Library, Activity, FileText, Menu, X, Plus } from 'lucide-react';
+import { PenTool, MessageSquare, Brain, ArrowRight, ArrowLeft, Sparkles, Globe, LogIn, LogOut, LayoutDashboard, User, Clock, CheckCircle2, Edit3, Eye, ChevronDown, ChevronRight, BookOpen, Settings, Library, Activity, FileText, Menu, X, Plus } from 'lucide-react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 
-const VERSION = "v2026-03-18 Wednesday 18:38:00";
+const VERSION = "v2026-03-18 Wednesday 11:50:00";
 
 const translations = {
   en: {
@@ -51,7 +51,7 @@ const translations = {
         { id: 'decision_matrix', name: 'Decision Matrix', desc: 'List options and criteria for rational decision analysis.' }
       ]
     },
-    dashboard: { title: 'Workspace', welcome: 'Welcome back, Admin', card1: 'Language Practice', card2: 'Ink Practice', card3: 'Mind Records', start: 'Start Session', totalTime: 'Total Learning Time', session: 'Current Session', recent: 'Recent Activity', quickStart: 'Quick Start' },
+    dashboard: { title: 'Workspace', welcome: 'Welcome back', card1: 'Language Practice', card2: 'Ink Practice', card3: 'Mind Records', start: 'Start Session', totalTime: 'Total Learning Time', session: 'Current Session', recent: 'Recent Activity', quickStart: 'Quick Start' },
     practice: {
       end: 'End Session & Save Time',
       write: 'Write',
@@ -105,7 +105,7 @@ const translations = {
         { id: 'decision_matrix', name: '决策矩阵', desc: '列出选项与评估标准，进行理性的决策分析。' }
       ]
     },
-    dashboard: { title: '工作台', welcome: '欢迎回来，Admin', card1: '语言练习', card2: '书写练习', card3: '思维记录', start: '开始练习', totalTime: '累计学习时长', session: '本次练习', recent: '最近活动', quickStart: '快速开始' },
+    dashboard: { title: '工作台', welcome: '欢迎回来', card1: '语言练习', card2: '书写练习', card3: '思维记录', start: '开始练习', totalTime: '累计学习时长', session: '本次练习', recent: '最近活动', quickStart: '快速开始' },
     practice: {
       end: '结束练习并保存时长',
       write: '编写',
@@ -165,7 +165,7 @@ export default function App() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === 'admin' && password === 'admin@123') {
+    if ((username === 'admin' && password === 'admin@123') || (username === 'tiyan' && password === 'tiyan@123ty')) {
       setIsLoggedIn(true);
       setView('workspace');
       setActiveSidebarItem('dashboard');
@@ -397,12 +397,21 @@ export default function App() {
         )}
 
         {view === 'login' && (
-          <div className="flex-1 flex items-center justify-center px-6 py-12 w-full">
+          <div className="flex-1 flex items-center justify-center px-6 py-12 w-full relative">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }} 
               animate={{ opacity: 1, scale: 1 }} 
-              className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-gray-100 w-full max-w-md"
+              className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-gray-100 w-full max-w-md relative"
             >
+              <button 
+                onClick={() => setView('home')} 
+                className="absolute top-6 left-6 text-gray-400 hover:text-black transition-colors flex items-center gap-1 text-sm font-medium"
+                title={lang === 'en' ? 'Back to Home' : '返回首页'}
+              >
+                <ArrowLeft className="w-5 h-5" />
+                <span className="hidden sm:inline">{lang === 'en' ? 'Back' : '返回'}</span>
+              </button>
+              
               <div className="flex justify-center mb-8">
                 <img src="https://allapple.top/resource/logo.png" alt="Logo" className="w-12 h-12 object-contain" referrerPolicy="no-referrer" />
               </div>
@@ -447,7 +456,7 @@ export default function App() {
                   <User className="w-5 h-5 text-gray-500" />
                 </div>
                 <div>
-                  <p className="font-medium text-sm">Admin</p>
+                  <p className="font-medium text-sm">{username || 'Admin'}</p>
                   <p className="text-xs text-gray-500">{t.nav.workspace}</p>
                 </div>
               </div>
@@ -528,7 +537,7 @@ export default function App() {
                           <User className="w-8 h-8 text-gray-500" />
                         </div>
                         <div>
-                          <h1 className="text-3xl font-serif font-medium">{t.dashboard.welcome}</h1>
+                          <h1 className="text-3xl font-serif font-medium">{t.dashboard.welcome}, {username || 'Admin'}</h1>
                           <p className="text-gray-500 mt-1">{t.dashboard.title}</p>
                         </div>
                       </div>
