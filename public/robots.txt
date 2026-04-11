@@ -1,4 +1,2 @@
 User-agent: *
 Allow: /
-
-Sitemap: https://allapple-pc-xiaopengvips-projects.vercel.app/sitemap.xml
